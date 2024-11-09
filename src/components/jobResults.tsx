@@ -5,10 +5,12 @@ import { Prisma } from "@prisma/client";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import JobListItem from "./JoblistItem";
+
 interface JobResultsProps {
     filterValues: JobFilterValues;
     page?: number;
 }
+
 export default async function JobResults({
     filterValues,
     page = 1,
@@ -16,10 +18,12 @@ export default async function JobResults({
     const { q, type, location, remote } = filterValues;
     const jobsPerPage = 6;
     const skip = (page - 1) * jobsPerPage;
+
     const searchString = q
         ?.split(" ")
         .filter((word) => word.length > 0)
         .join(" & ");
+
     const searchFilter: Prisma.JobWhereInput = searchString
         ? {
             OR: [
@@ -31,6 +35,7 @@ export default async function JobResults({
             ],
         }
         : {};
+
     const where: Prisma.JobWhereInput = {
         AND: [
             searchFilter,
@@ -40,6 +45,7 @@ export default async function JobResults({
             { approved: true },
         ],
     };
+
     const jobsPromise = prisma.job.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -47,16 +53,20 @@ export default async function JobResults({
         skip,
     });
     const countPromise = prisma.job.count({ where });
+
     const [jobs, totalResults] = await Promise.all([jobsPromise, countPromise]);
+
     return (
-        <div className="grow space-y-4">
+        <div className="grow space-y-6 bg-gray-900 text-gray-200 p-6 rounded-lg shadow-lg">
             {jobs.map((job) => (
                 <Link key={job.id} href={`/jobs/${job.slug}`} className="block">
-                    <JobListItem job={job} />
+                    <div className="p-4 bg-gray-800 rounded-md hover:bg-gray-700 border border-gray-700 transition duration-200 ease-in-out">
+                        <JobListItem job={job} />
+                    </div>
                 </Link>
             ))}
             {jobs.length === 0 && (
-                <p className="m-auto text-center">
+                <p className="text-center text-gray-400">
                     No jobs found. Try adjusting your search filters.
                 </p>
             )}
@@ -70,11 +80,13 @@ export default async function JobResults({
         </div>
     );
 }
+
 interface PaginationProps {
     currentPage: number;
     totalPages: number;
     filterValues: JobFilterValues;
 }
+
 function Pagination({
     currentPage,
     totalPages,
@@ -90,29 +102,30 @@ function Pagination({
         });
         return `/?${searchParams.toString()}`;
     }
+
     return (
-        <div className="flex justify-between">
+        <div className="flex justify-center items-center space-x-6 mt-8 text-gray-400">
             <Link
                 href={generatePageLink(currentPage - 1)}
                 className={cn(
-                    "flex items-center gap-2 font-semibold",
+                    "flex items-center gap-2 px-4 py-2 font-semibold rounded-md bg-gray-800 hover:bg-gray-700 text-blue-400 transition duration-200 ease-in-out",
                     currentPage <= 1 && "invisible",
                 )}
             >
                 <ArrowLeft size={16} />
-                Previous page
+                Previous
             </Link>
-            <span className="font-semibold">
+            <span className="font-semibold text-gray-300">
                 Page {currentPage} of {totalPages}
             </span>
             <Link
                 href={generatePageLink(currentPage + 1)}
                 className={cn(
-                    "flex items-center gap-2 font-semibold",
+                    "flex items-center gap-2 px-4 py-2 font-semibold rounded-md bg-gray-800 hover:bg-gray-700 text-blue-400 transition duration-200 ease-in-out",
                     currentPage >= totalPages && "invisible",
                 )}
             >
-                Next page
+                Next
                 <ArrowRight size={16} />
             </Link>
         </div>
